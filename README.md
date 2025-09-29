@@ -109,38 +109,3 @@ TravelX is a next-generation trip-tracking application developed for the Smart I
     ```
     The server will be running on `http://localhost:5000`.
 
----
-
-## Project Structure 📂
-
-### Frontend
-X/
-├── lib/
-│   ├── screens/         # UI screens
-│   ├── services/        # Business logic (GPS, Bluetooth, Sync, etc.)
-│   ├── models/          # Data models
-│   ├── widgets/         # Reusable UI components
-│   ├── main.dart        # App entry point
-│   └── ...
-├── android/             # Android specific files
-├── ios/                 # iOS specific files
-└── pubspec.yaml         # Dependencies and project info
-
-
-### Backend
-
-X/Backend/
-├── src/
-│   ├── repo/           # Database repositories
-│   ├── config.js       # Configuration loader
-│   ├── index.js        # Main server entry point
-│   ├── queue.js        # BullMQ task queue setup
-│   ├── server.js       # Express server and routes
-│   └── ...
-├── prisma/
-│   ├── schema.prisma   # Prisma schema for PostgreSQL
-│   └── migrations/     # Database migrations
-├── .env                # Environment variables
-└── package.json        # Node.js dependencies
-
-
