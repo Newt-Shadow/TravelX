@@ -12,6 +12,7 @@ import 'services/sync_service.dart';
 import 'services/gps_service.dart';
 import 'services/accel_service.dart';
 import 'services/bluetooth_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/activity_service.dart';
 import 'services/detection_service.dart';
 import 'services/auth_service.dart'; // Import your new Auth Service
@@ -19,6 +20,7 @@ import 'screens/auth_wrapper.dart'; // Import the new Auth Wrapper
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   // --- Initialize Firebase FIRST ---
   await Firebase.initializeApp(

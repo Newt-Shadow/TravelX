@@ -50,6 +50,7 @@ app.*.map.json
 # ===================================
 .dart_tool/
 .packages
+.env
 .pub/
 build/
 .flutter-plugins
