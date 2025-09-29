@@ -1,0 +1,22 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Trip {
+  id            String   @id @default(uuid())
+  tripClientId  String   @unique
+  anonUser      String
+  startTime     DateTime
+  endTime       DateTime?
+  duration      Int?
+  distance      Float?
+  mode          String?
+  path          Json
+  meta          Json?
+  createdAt     DateTime @default(now())
+}

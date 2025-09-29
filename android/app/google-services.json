@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969091346696",
+    "project_id": "travelx-45a54",
+    "storage_bucket": "travelx-45a54.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969091346696:android:7b7deba8085c323a937cbd",
+        "android_client_info": {
+          "package_name": "com.example.helloworld"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCr7B1nwydPK01rN34B9VDHu1pkD-7KFyM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
