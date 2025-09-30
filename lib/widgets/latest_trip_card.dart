@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class ApiConfig {
-  static const String API_BASE_URL = 'http://0.0.0.0:5000/api';
+  static const String API_BASE_URL = 'http://http://34.55.89.158:5000/api';
 }
 
 class LatestTripCard extends StatefulWidget {

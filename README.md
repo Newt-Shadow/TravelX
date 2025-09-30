@@ -2,7 +2,7 @@
 
 **Advanced Trip Capture app (modular, failproof detection, offline-first)**
 
-TravelX is a next-generation trip-tracking application developed for the Smart India Hackathon (SIH). It's designed to be a robust, offline-first, and feature-rich platform for capturing, analyzing, and sharing your travel experiences.
+TravelX is a next-generation trip-tracking application developed for the Smart India Hackathon (SIH). It's designed to be a robust, offline-first, and feature-rich platform for capturing, analyzing, and sharing travel experiences.
 
 
 
@@ -11,13 +11,13 @@ TravelX is a next-generation trip-tracking application developed for the Smart I
 ## 🌟 Key Features
 
 * **Effortless Trip Recording:** Automatically detects and records your trips with high precision, using a sophisticated sensor-fusion algorithm. Also supports manual start/stop for full control.
-* **Offline-First Sync:** Your trips are always saved locally first. The app intelligently syncs with the backend when an internet connection is available, ensuring no data is ever lost.
-* **Peer-to-Peer Syncing with Bluetooth:** 🤝 In areas with no internet, TravelX can sync your trip data with nearby "Travel Buddies" using Bluetooth Low Energy (BLE), creating a mesh network for data transfer.
-* **Intelligent Activity Detection:** Utilizes a combination of GPS, accelerometer, and gyroscope data to accurately determine your mode of transport (walk, run, bike, car, bus, train).
+* **Offline-First Sync:** Trips are always saved locally first. The app intelligently syncs with the backend when an internet connection is available, ensuring no data is ever lost.
+* **Peer-to-Peer Syncing with Bluetooth:**  In areas with no internet, TravelX can sync the trip data with nearby "Travel Buddies" using Bluetooth Low Energy (BLE), creating a mesh network for data transfer.
+* **Intelligent Activity Detection:** Utilizes a combination of GPS, accelerometer, and gyroscope data to accurately determine   mode of transport (walk, run, bike, car, bus, train).
 * **Advanced Analytics & Insights:**
-    * **Trip History:** A detailed log of all your past trips, with maps and statistics.
+    * **Trip History:** A detailed log of all the past trips, with maps and statistics.
     * **Personalized Insights:** Understand your travel patterns with charts and graphs.
-    * **Heatmaps:** Visualize your most frequented routes and destinations.
+    * **Heatmaps:** Visualize the most frequented routes and destinations.
 * **Travel Buddy Discovery:** Discover and connect with other TravelX users nearby, turning solo trips into social experiences.
 * **Secure & Private:** User data is anonymized and securely handled.
 
