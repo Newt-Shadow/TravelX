@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async'; 
 import 'package:provider/provider.dart';
 import '../services/bluetooth_service.dart';
 import '../services/storage_service.dart';
@@ -7,6 +8,9 @@ import 'trip_history_screen.dart';
 import 'trip_insights_screen.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/detection_service.dart';
+import '../models/trip.dart';
+import 'trip_completion_screen.dart';
 
 import 'trip_analytics_screen.dart';
 import 'travel_buddy_screen.dart';
@@ -24,6 +28,8 @@ class _MainNavigationState extends State<MainNavigation>
     with WidgetsBindingObserver {
   int _idx = 0;
   late final BluetoothService _btService;
+  late final DetectionService _detectionService;
+  StreamSubscription<Trip>? _tripCompletionSub;
 
   final _screens = const [
     TripCaptureScreen(),
@@ -41,14 +47,22 @@ class _MainNavigationState extends State<MainNavigation>
     WidgetsBinding.instance.addObserver(this);
     // Get the BluetoothService instance from the provider.
     _btService = Provider.of<BluetoothService>(context, listen: false);
+    _detectionService = Provider.of<DetectionService>(context, listen: false);
     // Start passive advertising when the app first opens.
     _startPassive();
+
+    // Listen for completed trips
+    _tripCompletionSub =
+        _detectionService.tripCompletionStream.listen((trip) {
+      _showTripCompletionDialog(trip);
+    });
   }
 
   @override
   void dispose() {
     // Clean up the observer when the widget is removed.
     WidgetsBinding.instance.removeObserver(this);
+    _tripCompletionSub?.cancel();
     super.dispose();
   }
 
@@ -63,6 +77,13 @@ class _MainNavigationState extends State<MainNavigation>
       // The app has gone to the background.
       _btService.stopPassiveAdvertising();
     }
+  }
+
+  void _showTripCompletionDialog(Trip trip) {
+    showDialog(
+      context: context,
+      builder: (context) => TripCompletionScreen(trip: trip),
+    );
   }
 
   /// A helper method to safely start passive advertising.

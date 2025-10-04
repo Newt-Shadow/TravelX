@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:geocoding/geocoding.dart';
-import '../services/storage_service.dart';
+import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 
 class TripAnalyticsScreen extends StatefulWidget {
   const TripAnalyticsScreen({super.key});
@@ -15,11 +16,42 @@ class _TripAnalyticsScreenState extends State<TripAnalyticsScreen> {
   Map<String, int> odCounts = {};
   final Map<String, String> _geocodeCache = {};
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _processTrips();
+    _fetchAndProcessTrips();
+  }
+
+  Future<void> _fetchAndProcessTrips() async {
+    final userId = AuthService.currentUserId;
+    if (userId == null) {
+      setState(() {
+        _error = "Please sign in to view analytics.";
+        _loading = false;
+      });
+      return;
+    }
+
+    final url = Uri.parse('http://localhost:5000/api/trips/$userId');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        final List<dynamic> trips = jsonDecode(response.body);
+        await _processTrips(trips);
+      } else {
+        setState(() {
+          _error = "Error fetching trips: ${response.statusCode}";
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = "Could not connect to the server.";
+        _loading = false;
+      });
+    }
   }
 
   Future<String> _getPlaceLabel(double lat, double lng) async {
@@ -43,35 +75,20 @@ class _TripAnalyticsScreenState extends State<TripAnalyticsScreen> {
     return fallback;
   }
 
-  Future<void> _processTrips() async {
-    final tripsRaw = StorageService.box.values.toList();
-    if (tripsRaw.isEmpty) {
+  Future<void> _processTrips(List<dynamic> trips) async {
+    if (trips.isEmpty) {
       setState(() => _loading = false);
       return;
     }
 
     final counts = <String, int>{};
 
-    // Process trips concurrently
-    await Future.wait(tripsRaw.map((raw) async {
-      Map<String, dynamic> t;
-      if (raw is String) {
-        try {
-          t = Map<String, dynamic>.from(jsonDecode(raw));
-        } catch (_) {
-          return;
-        }
-      } else if (raw is Map) {
-        t = Map<String, dynamic>.from(raw);
-      } else {
-        return;
-      }
+    for (var t in trips) {
+      final path = (t['path'] as List? ?? []);
+      if (path.length < 2) continue;
 
-      final segs = (t['segments'] as List? ?? []);
-      if (segs.isEmpty) return;
-
-      final originGps = segs.first['gps'].first;
-      final destGps = segs.last['gps'].last;
+      final originGps = path.first;
+      final destGps = path.last;
 
       final originLabel =
           await _getPlaceLabel(originGps['lat'], originGps['lng']);
@@ -80,7 +97,7 @@ class _TripAnalyticsScreenState extends State<TripAnalyticsScreen> {
 
       final pair = "$originLabel → $destLabel";
       counts[pair] = (counts[pair] ?? 0) + 1;
-    }));
+    }
 
     if (!mounted) return;
     setState(() {
@@ -91,6 +108,20 @@ class _TripAnalyticsScreenState extends State<TripAnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        // appBar: AppBar(title: Text('Trip Analytics')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Trip Analytics')),
+        body: Center(child: Text(_error!)),
+      );
+    }
+
     final items = odCounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final totalTrips = odCounts.values.fold<int>(0, (sum, v) => sum + v);
@@ -99,81 +130,85 @@ class _TripAnalyticsScreenState extends State<TripAnalyticsScreen> {
       appBar: AppBar(title: const Text('Trip Analytics')),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : items.isEmpty
-                ? const Center(child: Text("No trips yet"))
-                : Column(
-                    children: [
-                      Expanded(
-                        child: ListView(
-                          children: items
-                              .map(
-                                (e) => ListTile(
-                                  title: Text(e.key),
-                                  trailing: Text(
-                                      "x${e.value} (${(e.value / totalTrips * 100).toStringAsFixed(1)}%)"),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                      const Divider(),
-                      SizedBox(
-                        height: 220,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SizedBox(
-                            width: items.length * 60.0,
-                            child: BarChart(
-                              BarChartData(
-                                barGroups: [
-                                  for (int i = 0; i < items.length; i++)
-                                    BarChartGroupData(
-                                      x: i,
-                                      barRods: [
-                                        BarChartRodData(
-                                          toY: items[i].value.toDouble(),
-                                          color: Colors.indigo,
-                                          width: 18,
-                                        )
-                                      ],
+        child: items.isEmpty
+            ? const Center(child: Text("No trips yet"))
+            : Column(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      children: items
+                          .map(
+                            (e) => ListTile(
+                              title: Text(e.key),
+                              trailing: Text(
+                                  "x${e.value} (${(e.value / totalTrips * 100).toStringAsFixed(1)}%)"),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                  const Divider(),
+                  SizedBox(
+                    height: 220,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: items.length * 60.0,
+                        child: BarChart(
+                          BarChartData(
+                            barGroups: [
+                              for (int i = 0; i < items.length; i++)
+                                BarChartGroupData(
+                                  x: i,
+                                  barRods: [
+                                    BarChartRodData(
+                                      toY: items[i].value.toDouble(),
+                                      color: Colors.indigo,
+                                      width: 18,
                                     )
-                                ],
-                                titlesData: FlTitlesData(
-                                  show: true,
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      getTitlesWidget: (value, meta) {
-                                        final idx = value.toInt();
-                                        if (idx < 0 || idx >= items.length) return const SizedBox.shrink();
-                                        final text = items[idx].key.split('→').last.trim();
-                                        return SideTitleWidget(
-                                          meta: meta,
-                                          child: RotatedBox(
-                                            quarterTurns: 1,
-                                            child: Text(
-                                              text,
-                                              style: const TextStyle(fontSize: 10),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: true),
-                                  ),
+                                  ],
+                                )
+                            ],
+                            titlesData: FlTitlesData(
+                              show: true,
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    final idx = value.toInt();
+                                    if (idx < 0 || idx >= items.length) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    final text = items[idx]
+                                        .key
+                                        .split('→')
+                                        .last
+                                        .trim();
+                                    return SideTitleWidget(
+                                      meta: meta,
+                                      child: RotatedBox(
+                                        quarterTurns: 1,
+                                        child: Text(
+                                          text,
+                                          style: const TextStyle(fontSize: 10),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                                borderData: FlBorderData(show: false),
+                              ),
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: true),
                               ),
                             ),
+                            borderData: FlBorderData(show: false),
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
       ),
     );
   }

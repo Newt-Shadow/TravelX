@@ -11,7 +11,7 @@ import '../services/auth_service.dart';
 
 class SyncService {
   static final SyncService instance = SyncService._internal();
-  static const String BACKEND_URL = 'http://http://34.55.89.158:5000/api/trips';
+  static const String BACKEND_URL = 'http://localhost:5000/api/trips';
 
   final Connectivity _conn = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _sub;

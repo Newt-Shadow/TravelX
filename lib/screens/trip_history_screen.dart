@@ -13,7 +13,7 @@ import '../services/storage_service.dart';
 import '../services/sync_service.dart';
 
 class ApiConfig {
-  static const String API_BASE_URL = 'http://http://34.55.89.158:5000/api';
+  static const String API_BASE_URL = 'http://localhost:5000/api';
 }
 
 class TripHistoryScreen extends StatefulWidget {

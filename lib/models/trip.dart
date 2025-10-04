@@ -8,6 +8,8 @@ class TripSegment {
   List<Map<String, dynamic>> gps;
   List<Map<String, dynamic>> accel;
   List<Map<String, dynamic>> bt;
+  double? cost;
+  String? notes;
 
   TripSegment({
     required this.id,
@@ -17,6 +19,8 @@ class TripSegment {
     List<Map<String, dynamic>>? gps,
     List<Map<String, dynamic>>? accel,
     List<Map<String, dynamic>>? bt,
+    this.cost,
+    this.notes,
   })  : gps = gps ?? [],
         accel = accel ?? [],
         bt = bt ?? [];
@@ -29,10 +33,10 @@ class TripSegment {
         'gps': gps,
         'accel': accel,
         'bt': bt,
+        'cost': cost,
+        'notes': notes,
       };
 
-  /// ✅ FIXED: A robust factory that safely parses data.
-  /// It handles nulls and uses tryParse to prevent crashes from bad date formats.
   static TripSegment fromJson(Map<String, dynamic> m) {
     return TripSegment(
       id: m['id'] ?? 'unknown_segment_id',
@@ -42,18 +46,22 @@ class TripSegment {
       gps: List<Map<String, dynamic>>.from(m['gps'] ?? []),
       accel: List<Map<String, dynamic>>.from(m['accel'] ?? []),
       bt: List<Map<String, dynamic>>.from(m['bt'] ?? []),
+      cost: (m['cost'] as num?)?.toDouble(),
+      notes: m['notes'] as String?,
     );
   }
 }
 
 class Trip {
-String id;
-String anonUserId;
-DateTime createdAt;
-List<TripSegment> segments;
-List<String> companions;
-bool uploaded;
-DateTime? uploadedAt;
+  String id;
+  String anonUserId;
+  DateTime createdAt;
+  List<TripSegment> segments;
+  List<String> companions;
+  bool uploaded;
+  DateTime? uploadedAt;
+  double? cost;
+  String? notes;
 
   Trip({
     required this.id,
@@ -63,6 +71,8 @@ DateTime? uploadedAt;
     List<String>? companions,
     this.uploaded = false,
     this.uploadedAt,
+    this.cost,
+    this.notes,
   })  : segments = segments ?? [],
         companions = companions ?? [];
 
@@ -74,9 +84,10 @@ DateTime? uploadedAt;
         'companions': companions,
         'uploaded': uploaded,
         'uploadedAt': uploadedAt?.toUtc().toIso8601String(),
+        'cost': cost,
+        'notes': notes,
       };
 
-  /// ✅ FIXED: A robust factory that safely parses the main trip object.
   static Trip fromJson(Map<String, dynamic> m) {
     final segmentsList = m['segments'] as List? ?? [];
     return Trip(
@@ -88,8 +99,10 @@ DateTime? uploadedAt;
           .toList(),
       companions: List<String>.from(m['companions'] ?? []),
       uploaded: m['uploaded'] as bool? ?? false,
-      uploadedAt: m['uploadedAt'] == null ? null : DateTime.tryParse(m['uploadedAt']),
+      uploadedAt:
+          m['uploadedAt'] == null ? null : DateTime.tryParse(m['uploadedAt']),
+      cost: (m['cost'] as num?)?.toDouble(),
+      notes: m['notes'] as String?,
     );
   }
 }
-

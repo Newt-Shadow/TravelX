@@ -44,6 +44,16 @@ class StorageService {
     await box.put(key, Map<String, dynamic>.from(trip));
   }
 
+  static Future<void> updateTrip(
+      String key, Map<String, dynamic> updates) async {
+    final existingTrip = getTrip(key);
+    if (existingTrip != null) {
+      existingTrip.addAll(updates);
+      await box.put(key, existingTrip);
+      print("🔄 Updated trip $key with new details.");
+    }
+  }
+
   static Future<void> deleteTrip(String key) async {
     print("🗑 Deleting trip locally with key: $key");
     await box.delete(key);

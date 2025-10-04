@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../services/storage_service.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/auth_service.dart';
 
 class TripInsightsScreen extends StatefulWidget {
   const TripInsightsScreen({super.key});
@@ -12,30 +13,77 @@ class TripInsightsScreen extends StatefulWidget {
 
 class _TripInsightsScreenState extends State<TripInsightsScreen> {
   String? _selectedMode;
+  Map<String, int> _modeCounts = {};
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTripData();
+  }
+
+  Future<void> _fetchTripData() async {
+    final userId = AuthService.currentUserId;
+    if (userId == null) {
+      setState(() {
+        _error = "Please sign in to view insights.";
+        _loading = false;
+      });
+      return;
+    }
+
+    final url = Uri.parse('http://localhost:5000/api/trips/$userId');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        final List<dynamic> trips = jsonDecode(response.body);
+        _processTrips(trips);
+      } else {
+        setState(() {
+          _error = "Error fetching trips: ${response.statusCode}";
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = "Could not connect to the server.";
+        _loading = false;
+      });
+    }
+  }
+
+  void _processTrips(List<dynamic> trips) {
+    final Map<String, int> modeCounts = {};
+
+    for (var t in trips) {
+      final m = (t['mode'] ?? 'unknown') as String;
+      modeCounts[m] = (modeCounts[m] ?? 0) + 1;
+    }
+
+    setState(() {
+      _modeCounts = modeCounts;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final trips = StorageService.box.values.toList();
-    final Map<String, int> modeCounts = {};
-
-    for (var raw in trips) {
-      Map<String, dynamic> t = {};
-      if (raw is String) {
-        try {
-          t = Map<String, dynamic>.from(jsonDecode(raw));
-        } catch (_) {}
-      } else if (raw is Map) {
-        t = Map<String, dynamic>.from(raw);
-      }
-
-      final segs = (t['segments'] as List? ?? []);
-      for (var seg in segs) {
-        final m = (seg['mode'] ?? 'unknown') as String;
-        modeCounts[m] = (modeCounts[m] ?? 0) + 1;
-      }
+    if (_loading) {
+      return const Scaffold(
+        // appBar: AppBar(title: Text('Trip Insights')),
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
-    final total = modeCounts.values.fold<int>(0, (sum, v) => sum + v);
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Trip Insights')),
+        body: Center(child: Text(_error!)),
+      );
+    }
+
+    final total = _modeCounts.values.fold<int>(0, (sum, v) => sum + v);
     final colors = [
       Colors.blue,
       Colors.red,
@@ -48,7 +96,7 @@ class _TripInsightsScreenState extends State<TripInsightsScreen> {
       Colors.pink,
       Colors.brown,
     ];
-    final items = modeCounts.entries.toList()
+    final items = _modeCounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return Scaffold(
@@ -105,7 +153,7 @@ class _TripInsightsScreenState extends State<TripInsightsScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Text(
-                              '$_selectedMode: ${modeCounts[_selectedMode]!} segments (${(modeCounts[_selectedMode]! / total * 100).toStringAsFixed(1)}%)',
+                              '$_selectedMode: ${_modeCounts[_selectedMode]!} trips (${(_modeCounts[_selectedMode]! / total * 100).toStringAsFixed(1)}%)',
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold),
                             ),
